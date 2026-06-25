@@ -27,3 +27,12 @@ Professional PyTorch implementation for CIFAR-10 image classification.
 ```bash
 pip install -r requirements.txt
 ```
+
+## Usage
+
+```python
+from src.dataset import get_cifar10_datasets, get_dataloaders
+
+train_ds, val_ds, test_ds = get_cifar10_datasets()
+train_loader, val_loader, test_loader = get_dataloaders(train_ds, val_ds, test_ds)
+```
