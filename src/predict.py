@@ -1,6 +1,10 @@
 """Prediction module for CIFAR-10 image classification."""
 
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import torch
 import torch.nn.functional as F
 from PIL import Image

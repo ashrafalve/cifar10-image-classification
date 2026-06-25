@@ -229,6 +229,11 @@ def run_evaluation(
 
 
 if __name__ == "__main__":
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
     import argparse
 
     parser = argparse.ArgumentParser(description="Evaluate CIFAR-10 model")

@@ -1,6 +1,10 @@
 """Experiment comparison script for CIFAR-10 baseline vs ResNet18."""
 
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import json
 import argparse
 import torch
