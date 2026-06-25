@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn as nn
+from torchvision import models
 
 
 class ConvBlock(nn.Module):
@@ -73,13 +74,56 @@ class CIFAR10Baseline(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
+class ResNet18Transfer(nn.Module):
+    """ResNet18 with pretrained weights and modified classifier head for CIFAR-10."""
+
+    def __init__(self, num_classes=10, pretrained=True, freeze_backbone=False):
+        super().__init__()
+        self.backbone = models.resnet18(weights=models.ResNet18_Weights.DEFAULT if pretrained else None)
+
+        if freeze_backbone:
+            for param in self.backbone.parameters():
+                param.requires_grad = False
+
+        in_features = self.backbone.fc.in_features
+        self.backbone.fc = nn.Sequential(
+            nn.Dropout(p=0.5),
+            nn.Linear(in_features, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),
+            nn.Linear(256, num_classes),
+        )
+
+        nn.init.kaiming_normal_(self.backbone.fc[1].weight, mode="fan_out", nonlinearity="relu")
+        nn.init.constant_(self.backbone.fc[1].bias, 0)
+        nn.init.kaiming_normal_(self.backbone.fc[3].weight, mode="fan_out", nonlinearity="relu")
+        nn.init.constant_(self.backbone.fc[3].bias, 0)
+
+    def forward(self, x):
+        return self.backbone(x)
+
+
 def count_parameters(model):
     """Return the number of trainable parameters in a model."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def get_model(num_classes=10, dropout=0.3):
-    """Factory function to create the baseline model."""
-    model = CIFAR10Baseline(num_classes=num_classes, dropout=dropout)
-    print(f"Model created with {count_parameters(model):,} trainable parameters.")
+def get_model(model_name="baseline", num_classes=10, dropout=0.3, pretrained=True, freeze_backbone=False):
+    """Factory function to create a model.
+
+    Args:
+        model_name: 'baseline' or 'resnet18'
+        num_classes: number of output classes
+        dropout: dropout for baseline model
+        pretrained: use ImageNet pretrained weights for ResNet18
+        freeze_backbone: freeze ResNet18 backbone layers
+    """
+    if model_name == "baseline":
+        model = CIFAR10Baseline(num_classes=num_classes, dropout=dropout)
+        print(f"Created CIFAR10Baseline with {count_parameters(model):,} trainable parameters.")
+    elif model_name == "resnet18":
+        model = ResNet18Transfer(num_classes=num_classes, pretrained=pretrained, freeze_backbone=freeze_backbone)
+        print(f"Created ResNet18Transfer with {count_parameters(model):,} trainable parameters.")
+    else:
+        raise ValueError(f"Unknown model_name: {model_name}. Choose 'baseline' or 'resnet18'.")
     return model

@@ -128,9 +128,17 @@ def train(
     gamma=0.1,
     min_lr=1e-5,
     warmup_epochs=5,
+    model_name="baseline",
+    freeze_backbone=False,
 ):
     device = get_device()
     model = model.to(device)
+
+    if model_name == "resnet18" and freeze_backbone:
+        for param in model.backbone.parameters():
+            param.requires_grad = False
+        for param in model.backbone.fc.parameters():
+            param.requires_grad = True
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
@@ -177,3 +185,5 @@ def train(
 
     writer.close()
     tqdm.write(f"Training complete. Best validation accuracy: {100.0 * best_acc:.2f}%")
+
+    return best_acc
